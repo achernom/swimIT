@@ -1,0 +1,2 @@
+# El pipeline usa solo la biblioteca estándar de Python 3.10+.
+# Requiere además poppler-utils (pdftotext, pdfinfo) instalado en el sistema.
