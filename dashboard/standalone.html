@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Natación Master — Análisis de competencias</title>
+<style>
+  :root {
+    color-scheme: light;
+    --font-anthropic-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-anthropic-serif: Georgia, "Times New Roman", serif;
+    --color-fg: #1f2328; --color-fg-muted: #656d76; --color-bg: #f6f7f9; --color-panel: #ffffff;
+    --color-border-line: #e3e6ea; --color-ok: #1a7f37; --color-warn: #9a6700; --color-bad: #cf222e;
+    --cds-font-size-caption: 12px; --cds-font-size-body: 14px; --cds-font-size-heading: 16px; --cds-font-size-title: 28px;
+    --cds-font-weight-medium: 600;
+    --cds-gap-xs: 4px; --cds-gap-sm: 8px; --cds-gap-md: 16px; --cds-gap-lg: 24px;
+    --cds-pad-xs: 4px; --cds-pad-sm: 8px; --cds-pad-md: 12px; --cds-pad-lg: 20px;
+    --cds-radius: 8px;
+    --cds-chart-axis: #c4c9cf; --cds-chart-grid: #eceef1; --cds-chart-reference: #8c959f; --cds-chart-muted: #c4c9cf;
+    --cds-surface-popover: #ffffff; --cds-border: #d0d7de; --cds-shadow-popover: 0 4px 12px rgba(0,0,0,.12);
+    --cds-text-secondary: #656d76; --cds-dur-slow: 300ms;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --color-fg: #e6edf3; --color-fg-muted: #9198a1; --color-bg: #0d1117; --color-panel: #161b22;
+      --color-border-line: #30363d; --color-ok: #3fb950; --color-warn: #d29922; --color-bad: #f85149;
+      --cds-chart-axis: #484f58; --cds-chart-grid: #21262d; --cds-chart-reference: #6e7681; --cds-chart-muted: #484f58;
+      --cds-surface-popover: #1c2128; --cds-border: #30363d; --cds-text-secondary: #9198a1;
+    }
+  }
+  body { margin: 0; background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); }
+  #dash-root { padding: var(--dash-gutter, 20px); }
+  .dash-skeleton:empty, .dash-skeleton { background: linear-gradient(90deg, var(--color-border-line), transparent); border-radius: 4px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="dash-shim.js"></script>
+</head>
+<body>
+<div id="dash-root"></div>
+<script>
+  // Inserta index.html (el mismo archivo que usa el tablero en Claude) y ejecuta sus scripts en orden.
+  fetch('index.html').then((r) => r.text()).then((html) => {
+    const root = document.getElementById('dash-root');
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    const scripts = [...tpl.content.querySelectorAll('script')];
+    scripts.forEach((s) => s.remove());
+    root.appendChild(tpl.content);
+    scripts.forEach((s) => {
+      const el = document.createElement('script');
+      el.textContent = s.textContent;
+      document.body.appendChild(el);
+    });
+  });
+</script>
+</body>
+</html>

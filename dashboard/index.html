@@ -1,0 +1,968 @@
+<style>
+#dash-root { --dash-gutter: var(--cds-pad-lg); }
+.nm { font-family: var(--font-anthropic-sans); color: var(--color-fg); max-width: 1400px; margin-inline: auto; }
+.nm-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0 0 var(--cds-gap-xs); }
+.nm-head p { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); }
+.nm-head b { font-weight: 600; color: var(--color-fg); font-variant-numeric: tabular-nums; }
+.nm-tabs { display: flex; gap: var(--cds-gap-xs); margin: var(--cds-gap-lg) 0 var(--cds-gap-md); border-bottom: 1px solid var(--color-border-line); flex-wrap: wrap; }
+.nm-tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--cds-pad-sm) var(--cds-pad-md); font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg-muted); cursor: pointer; margin-bottom: -1px; }
+.nm-tab[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+.nm-page[hidden] { display: none; }
+.nm-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); align-items: end; margin-bottom: var(--cds-gap-md); }
+.nm-ctl { display: flex; flex-direction: column; gap: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nm-ctl select, .nm-ctl input { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); min-width: 12rem; max-width: 100%; }
+.nm-seg { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; }
+.nm-seg button { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg-muted); border: 0; padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; }
+.nm-seg button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); }
+.nm-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-md); }
+.nm-kpi { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); }
+.nm-kpi .l { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nm-kpi .v { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; margin-top: var(--cds-gap-xs); min-height: 1.2em; }
+.nm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-md); }
+.nm-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); position: relative; min-width: 0; }
+.nm-card.wide { grid-column: 1 / -1; }
+.nm-card h3 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+.nm-card .note { margin: var(--cds-gap-xs) 0 var(--cds-gap-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nm-chart { position: relative; width: 100%; min-height: 300px; }
+.nm-chart svg { display: block; overflow: visible; }
+.nm-chart text { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-caption); fill: var(--color-fg-muted); }
+.nm-chart .ax path, .nm-chart .ax line { stroke: var(--cds-chart-axis); }
+.nm-chart .grid line { stroke: var(--cds-chart-grid); }
+.nm-chart .grid path { display: none; }
+.nm-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-bottom: var(--cds-gap-sm); }
+.nm-legend span::before { content: ""; display: inline-block; width: .65rem; height: .65rem; border-radius: 50%; margin-right: .35rem; background: var(--sw); vertical-align: -1px; }
+.nm-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); z-index: 5; max-width: 16rem; display: none; }
+.nm-tip .t1 { color: var(--cds-text-secondary); }
+.nm-tablebox { max-height: 420px; overflow: auto; margin-top: var(--cds-gap-sm); }
+.nm-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.nm-table th { position: sticky; top: 0; background: var(--color-panel); text-align: left; font-weight: var(--cds-font-weight-medium); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+.nm-table th button { font: inherit; background: none; border: 0; padding: 0; color: inherit; cursor: pointer; }
+.nm-table td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.nm-table td.num, .nm-table th.num { text-align: right; }
+.nm-table tr.click { cursor: pointer; }
+.nm-table tr.click:hover td { background: var(--color-bg); }
+.nm-search { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); width: min(100%, 18rem); }
+.nm-chips { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); }
+.nm-chips button { font: inherit; font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg); border-radius: 999px; padding: 2px var(--cds-pad-sm); cursor: pointer; }
+.nm-profile { display: flex; flex-wrap: wrap; gap: var(--cds-gap-lg); align-items: baseline; margin-bottom: var(--cds-gap-md); }
+.nm-profile .name { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-title); font-weight: 400; }
+.nm-profile .meta { color: var(--color-fg-muted); font-size: var(--cds-font-size-body); }
+.nm-text { max-width: 52rem; font-size: var(--cds-font-size-body); line-height: 1.55; }
+.nm-text h3 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-lg) 0 var(--cds-gap-xs); }
+.nm-text code { font-size: .9em; }
+.nm-empty { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); padding: var(--cds-pad-lg) 0; }
+.nm-fail { display: flex; align-items: center; justify-content: center; gap: .4rem; min-height: inherit; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.nm-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="nm">
+  <header class="nm-head" id="inicio">
+    <h1>Natación master: competencias M2O 2019–2023</h1>
+    <p id="takeaway"><b class="dash-skeleton" data-source="kpis_globales" data-field="nadadores" data-row="0">—</b> nadadores únicos en <b class="dash-skeleton" data-source="kpis_globales" data-field="competencias" data-row="0">—</b> competencias y <b class="dash-skeleton" data-source="kpis_globales" data-field="resultados" data-row="0">—</b> resultados individuales; <b class="dash-skeleton" data-source="kpis_globales" data-field="multi" data-row="0">—</b> nadaron en dos o más torneos, lo que permite seguir su evolución.</p>
+  </header>
+
+  <nav class="nm-tabs" role="tablist" aria-label="Secciones">
+    <button class="nm-tab" role="tab" data-tab="competencia" aria-selected="true">Competencia</button>
+    <button class="nm-tab" role="tab" data-tab="nadadores" aria-selected="false">Nadadores</button>
+    <button class="nm-tab" role="tab" data-tab="evolucion" aria-selected="false">Evolución global</button>
+    <button class="nm-tab" role="tab" data-tab="metodo" aria-selected="false">Método</button>
+  </nav>
+
+  <!-- ================= COMPETENCIA ================= -->
+  <section class="nm-page" id="competencia">
+    <div class="nm-controls">
+      <label class="nm-ctl">Competencia<select id="sel-meet" data-source="competencias"></select></label>
+      <label class="nm-ctl">Prueba (para la distribución)<select id="sel-prueba"></select></label>
+      <div class="nm-ctl">Sexo<div class="nm-seg" id="seg-sexo"><button data-v="all">Todos</button><button data-v="M">Hombres</button><button data-v="F">Mujeres</button></div></div>
+    </div>
+
+    <div class="nm-kpis" id="kpis-meet">
+      <div class="nm-kpi"><div class="l">Nadadores</div><div class="v dash-skeleton" data-source="kpis_competencia" data-field="nadadores">—</div></div>
+      <div class="nm-kpi"><div class="l">Participaciones</div><div class="v dash-skeleton" data-source="kpis_competencia" data-field="participaciones">—</div></div>
+      <div class="nm-kpi"><div class="l">Equipos</div><div class="v dash-skeleton" data-source="kpis_competencia" data-field="equipos">—</div></div>
+      <div class="nm-kpi"><div class="l">Series (prueba × categoría)</div><div class="v dash-skeleton" data-source="kpis_competencia" data-field="series">—</div></div>
+      <div class="nm-kpi"><div class="l">Mediana puntos FINA</div><div class="v dash-skeleton" data-source="kpis_competencia" data-field="mediana_fina">—</div></div>
+      <div class="nm-kpi"><div class="l">Bajas (NS / DQ / DNF)</div><div class="v dash-skeleton" data-source="kpis_competencia" data-field="pct_bajas">—</div></div>
+    </div>
+
+    <div class="nm-grid">
+      <div class="nm-card" id="card-piramide">
+        <h3>Pirámide de participación</h3>
+        <p class="note">Nadadores distintos por categoría de edad y sexo.</p>
+        <div class="nm-legend" id="lg-sexo1"></div>
+        <div class="nm-chart dash-skeleton" id="ch-piramide" data-source="resultados"></div>
+      </div>
+      <div class="nm-card" id="card-dist">
+        <h3 id="tt-dist">Distribución de tiempos por categoría</h3>
+        <p class="note">Cada punto es un nadador; la marca vertical es la mediana de cada grupo. Más a la izquierda es más rápido.</p>
+        <div class="nm-legend" id="lg-sexo2"></div>
+        <div class="nm-chart dash-skeleton" id="ch-dist" data-source="resultados"></div>
+      </div>
+    </div>
+
+    <div class="nm-grid">
+      <div class="nm-card wide" id="card-edad">
+        <h3>Rendimiento según edad, con marginales</h3>
+        <p class="note">Puntos FINA de cada carrera (todas las pruebas) contra la edad. La línea es la mediana móvil por sexo; arriba, la distribución de edades; a la derecha, la de puntos.</p>
+        <div class="nm-legend" id="lg-sexo3"></div>
+        <div class="nm-chart dash-skeleton" id="ch-edad" data-source="resultados" style="min-height:380px"></div>
+      </div>
+    </div>
+
+    <div class="nm-grid">
+      <div class="nm-card" id="card-medallero">
+        <h3>Medallero por equipo</h3>
+        <p class="note">Podios en su categoría (1º, 2º, 3º), 12 equipos con más puntos ponderados (3-2-1). Incluye series con un solo nadador.</p>
+        <div class="nm-legend" id="lg-medal"></div>
+        <div class="nm-chart dash-skeleton" id="ch-medallero" data-source="resultados"></div>
+      </div>
+      <div class="nm-card" id="card-equipos">
+        <h3>Tamaño de equipo frente a nivel</h3>
+        <p class="note">Equipos con 3 o más nadadores: cantidad de nadadores contra mediana de puntos FINA. El tamaño del círculo es el número de participaciones.</p>
+        <div class="nm-chart dash-skeleton" id="ch-equipos" data-source="resultados"></div>
+      </div>
+    </div>
+
+    <div class="nm-grid">
+      <div class="nm-card" id="card-box">
+        <h3>Comparación entre y dentro de categorías</h3>
+        <p class="note">Puntos FINA por categoría: caja = rango intercuartil, línea = mediana, bigotes = percentiles 5–95.</p>
+        <div class="nm-controls" style="margin:0 0 var(--cds-gap-sm)"><div class="nm-ctl">Comparar por<div class="nm-seg" id="seg-comp"><button data-v="sexo">Sexo</button><button data-v="division">Libres / Federados</button></div></div></div>
+        <div class="nm-legend" id="lg-box"></div>
+        <div class="nm-chart dash-skeleton" id="ch-box" data-source="resultados"></div>
+      </div>
+      <div class="nm-card" id="card-mejora">
+        <h3>Tiempo final frente al de inscripción</h3>
+        <p class="note">Diferencia porcentual entre el tiempo logrado y el declarado al inscribirse. Negativo = mejoró. Recortado a ±20 %.</p>
+        <div class="nm-chart dash-skeleton" id="ch-mejora" data-source="resultados"></div>
+      </div>
+    </div>
+
+    <div class="nm-card wide" id="card-ranking">
+      <h3>Ranking de la competencia</h3>
+      <p class="note">Todas las carreras válidas ordenadas por puntos FINA (comparables entre estilos y distancias). Hacé clic en un nadador para ver su historial.</p>
+      <input class="nm-search" id="q-ranking" type="search" placeholder="Buscar nadador o equipo" aria-label="Buscar en el ranking">
+      <div class="nm-tablebox">
+        <table class="nm-table" id="tb-ranking" data-source="resultados" data-row-key="rid">
+          <thead><tr>
+            <th data-field="nadador"><button data-k="nadador">Nadador</button></th>
+            <th data-field="equipo"><button data-k="equipo">Equipo</button></th>
+            <th data-field="categoria"><button data-k="categoria">Categoría</button></th>
+            <th data-field="prueba"><button data-k="prueba">Prueba</button></th>
+            <th data-field="division"><button data-k="division">División</button></th>
+            <th data-field="tiempo" class="num"><button data-k="tiempo_s">Tiempo</button></th>
+            <th data-field="puesto" class="num"><button data-k="puesto">Puesto</button></th>
+            <th data-field="puntos_fina" class="num"><button data-k="puntos_fina">Puntos FINA</button></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= NADADORES ================= -->
+  <section class="nm-page" id="nadadores" hidden>
+    <div class="nm-controls">
+      <label class="nm-ctl">Nadador<input id="in-nad" list="dl-nad" type="search" placeholder="Escribí un apellido"></label>
+      <label class="nm-ctl">Comparar con (opcional)<input id="in-nad2" list="dl-nad" type="search" placeholder="Otro nadador"></label>
+      <datalist id="dl-nad"></datalist>
+    </div>
+    <div class="nm-ctl" style="margin-bottom:var(--cds-gap-md)">Con más torneos<div class="nm-chips" id="chips" data-source="resumen_nadador"></div></div>
+
+    <div class="nm-profile">
+      <span class="name dash-skeleton" id="p-name" data-source="resumen_nadador" data-field="nadador">—</span>
+      <span class="meta">Nacido en <span id="p-anio" data-source="resumen_nadador" data-field="anio_nac">—</span> · <span id="p-eq" data-source="resumen_nadador" data-field="equipos">—</span></span>
+    </div>
+    <div class="nm-kpis">
+      <div class="nm-kpi"><div class="l">Torneos</div><div class="v" id="p-torneos" data-source="resumen_nadador" data-field="torneos">—</div></div>
+      <div class="nm-kpi"><div class="l">Carreras válidas</div><div class="v" id="p-carreras" data-source="resumen_nadador" data-field="carreras">—</div></div>
+      <div class="nm-kpi"><div class="l">Mejor marca (puntos FINA)</div><div class="v" id="p-mejor" data-source="resumen_nadador" data-field="mejor_fina">—</div></div>
+      <div class="nm-kpi"><div class="l">Prueba de su mejor marca</div><div class="v" id="p-mejorp" data-source="resumen_nadador" data-field="mejor_prueba" style="font-size:var(--cds-font-size-heading)">—</div></div>
+    </div>
+
+    <div class="nm-grid">
+      <div class="nm-card wide" id="card-fina-t">
+        <h3>Puntos FINA a lo largo del tiempo</h3>
+        <p class="note">Cada punto es una carrera, coloreada por estilo; la línea une la mejor marca de cada torneo. Si elegiste un segundo nadador, su línea aparece punteada.</p>
+        <div class="nm-legend" id="lg-estilo"></div>
+        <div class="nm-chart dash-skeleton" id="ch-fina-t" data-source="resultados"></div>
+      </div>
+    </div>
+    <div class="nm-grid">
+      <div class="nm-card" id="card-pruebas">
+        <h3>Tiempos por prueba</h3>
+        <p class="note">Un panel por prueba; arriba = más rápido. Círculo lleno: pileta de 50 m; vacío: pileta de 25 m.</p>
+        <div class="nm-chart dash-skeleton" id="ch-pruebas" data-source="resultados"></div>
+      </div>
+      <div class="nm-card" id="card-pct">
+        <h3>Posición relativa en su serie</h3>
+        <p class="note">Percentil dentro de su prueba, categoría, sexo y división (100 = ganó, 0 = último).</p>
+        <div class="nm-chart dash-skeleton" id="ch-pct" data-source="resultados"></div>
+      </div>
+    </div>
+    <div class="nm-card wide" id="card-hist">
+      <h3>Historial completo</h3>
+      <div class="nm-tablebox">
+        <table class="nm-table" id="tb-nad" data-source="resultados" data-row-key="rid">
+          <thead><tr>
+            <th data-field="fecha">Fecha</th><th data-field="competencia">Competencia</th><th data-field="prueba">Prueba</th>
+            <th data-field="pileta">Pileta</th><th data-field="categoria">Categoría</th><th data-field="equipo">Equipo</th>
+            <th data-field="tiempo" class="num">Tiempo</th><th data-field="puesto" class="num">Puesto</th><th data-field="puntos_fina" class="num">Puntos FINA</th>
+          </tr></thead><tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EVOLUCIÓN ================= -->
+  <section class="nm-page" id="evolucion" hidden>
+    <div class="nm-grid">
+      <div class="nm-card" id="card-part">
+        <h3>Participación por competencia</h3>
+        <p class="note">Nadadores distintos por sexo en cada torneo.</p>
+        <div class="nm-legend" id="lg-sexo4"></div>
+        <div class="nm-chart dash-skeleton" id="ch-part" data-source="resultados"></div>
+      </div>
+      <div class="nm-card" id="card-curva">
+        <h3>Curva de edad</h3>
+        <p class="note">Mediana de puntos FINA por categoría y sexo, todas las competencias; la banda es el rango intercuartil.</p>
+        <div class="nm-legend" id="lg-sexo5"></div>
+        <div class="nm-chart dash-skeleton" id="ch-curva" data-source="resultados"></div>
+      </div>
+    </div>
+    <div class="nm-grid">
+      <div class="nm-card" id="card-heat">
+        <h3>Nivel por categoría y competencia</h3>
+        <p class="note">Mediana de puntos FINA. Celdas más intensas = nivel más alto; vacías = menos de 5 carreras.</p>
+        <div class="nm-chart dash-skeleton" id="ch-heat" data-source="resultados"></div>
+      </div>
+      <div class="nm-card" id="card-eqt">
+        <h3>Equipos a lo largo del tiempo</h3>
+        <p class="note">Nadadores por torneo de los 15 equipos con más participaciones.</p>
+        <div class="nm-chart dash-skeleton" id="ch-eqt" data-source="resultados"></div>
+      </div>
+    </div>
+    <div class="nm-grid">
+      <div class="nm-card" id="card-fidel">
+        <h3>Fidelización</h3>
+        <p class="note">Cuántos nadadores participaron en 1, 2, 3… torneos.</p>
+        <div class="nm-chart dash-skeleton" id="ch-fidel" data-source="resumen_nadador"></div>
+      </div>
+      <div class="nm-card" id="card-multi">
+        <h3>Nadadores con más torneos</h3>
+        <p class="note">Clic en una fila para abrir su ficha.</p>
+        <div class="nm-tablebox" style="max-height:340px">
+          <table class="nm-table" id="tb-multi" data-source="resumen_nadador" data-row-key="nadador_id">
+            <thead><tr><th data-field="nadador">Nadador</th><th data-field="equipos">Equipo(s)</th><th data-field="torneos" class="num">Torneos</th><th data-field="carreras" class="num">Carreras</th><th data-field="mejor_fina" class="num">Mejor FINA</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MÉTODO ================= -->
+  <section class="nm-page" id="metodo" hidden>
+    <div class="nm-text">
+      <h3>De dónde salen los datos</h3>
+      <p>Se procesaron los PDF de resultados de siete competencias master (HY-TEK Meet Manager). Un parser unificado reconoce encabezados en español e inglés, páginas a dos columnas, nombres truncados y glifos de acentos dañados. Las series de relevos se guardaron en la base pero no se muestran aquí.</p>
+      <h3>Identidad de los nadadores</h3>
+      <p>Un mismo nadador aparece con variantes («Ibañez, Juan» / «Ibanñez, Juan L»). Se unifican por apellido normalizado, primer nombre, sexo y año de nacimiento inferido (año del torneo menos la edad, con tolerancia de un año). En Buenos Aires 2019 los nombres vienen truncados a 15 caracteres y se emparejan por prefijo. Puede haber homónimos fusionados o personas duplicadas por cambios de grafía (por ejemplo «Corbalan» / «Corvalan»).</p>
+      <h3>Puntos FINA</h3>
+      <p>Para comparar estilos, distancias y piletas se usa la fórmula de World Aquatics: <code>puntos = 1000 × (tiempo base / tiempo)³</code>, con récords mundiales aproximados de 2022 como tiempo base, separados por sexo y tipo de pileta (25 m o 50 m). Son una referencia relativa, no puntos oficiales.</p>
+      <h3>Categorías y divisiones</h3>
+      <p>Las categorías 18-24 y 20-24 se agrupan como 18-24. «Libres» y «Federados» se toman del encabezado de cada prueba; en San Luis, del sufijo L/F del nombre. Las «golden race» y finales abiertas 20-100 se excluyen de los análisis por categoría y del medallero.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const C = dash.colors;
+  const SEXO = { M: 'Hombres', F: 'Mujeres' };
+  const ESTILOS = ['Libre', 'Espalda', 'Pecho', 'Mariposa', 'Combinado'];
+  const CATS = ['18-24','25-29','30-34','35-39','40-44','45-49','50-54','55-59','60-64','65-69','70-74','75-79','80-84','85-89','90-94'];
+  const fmtN = d3.format(',');
+  const fmtT = (s) => { if (s == null || isNaN(s)) return '—'; const m = Math.floor(s / 60), r = s - 60 * m; return m ? `${m}:${r.toFixed(2).padStart(5, '0')}` : r.toFixed(2); };
+  const fmtD = (d) => d3.utcFormat('%b %Y')(new Date(d));
+  const med = (a) => d3.median(a);
+  const sexColor = (g) => g === 'M' ? C[0] : C[1];
+  const estColor = (e) => C[ESTILOS.indexOf(e) % C.length];
+  window.NM = { fmtN, fmtT, fmtD, C, SEXO, ESTILOS, CATS, sexColor, estColor };
+
+  // ---------- Cálculos (visibles en Fuentes) ----------
+  dash.calc('kpis_globales', {
+    title: 'Totales de la base', description: 'Competencias, nadadores, resultados y nadadores con 2+ torneos.',
+    inputs: ['resultados'],
+    fn: (resultados) => {
+      const porNad = d3.rollup(resultados, (v) => new Set(v.map((r) => r.competencia)).size, (r) => r.nadador_id);
+      return [{
+        competencias: new Set(resultados.map((r) => r.competencia)).size,
+        nadadores: porNad.size,
+        resultados: resultados.length,
+        multi: [...porNad.values()].filter((n) => n >= 2).length,
+      }];
+    },
+  });
+  dash.calc('kpis_competencia', {
+    title: 'Indicadores por competencia', description: 'Nadadores, participaciones, equipos, series, mediana FINA y % de bajas por torneo.',
+    inputs: ['resultados'],
+    fn: (resultados) => d3.flatRollup(resultados, (v) => {
+      const ok = v.filter((r) => r.estado === 'OK');
+      return {
+        nadadores: new Set(v.map((r) => r.nadador_id)).size,
+        participaciones: v.length,
+        equipos: new Set(v.map((r) => r.equipo)).size,
+        series: new Set(v.map((r) => [r.prueba, r.sexo, r.categoria_original, r.division].join('|'))).size,
+        mediana_fina: Math.round(d3.median(ok, (r) => r.puntos_fina) ?? 0),
+        pct_bajas: (Math.round(1000 * v.filter((r) => ['NS', 'DQ', 'DNF'].includes(r.estado)).length / v.length) / 10) + ' %',
+      };
+    }, (r) => r.competencia).map(([competencia, o]) => ({ competencia, ...o })),
+  });
+  dash.calc('resumen_nadador', {
+    title: 'Resumen por nadador', description: 'Torneos, carreras válidas, equipos y mejor marca en puntos FINA de cada nadador.',
+    inputs: ['resultados'],
+    fn: (resultados) => d3.flatRollup(resultados, (v) => {
+      const ok = v.filter((r) => r.estado === 'OK' && r.puntos_fina != null);
+      const best = d3.greatest(ok, (r) => r.puntos_fina);
+      return {
+        nadador: v[0].nadador, sexo: v[0].sexo, anio_nac: v[0].anio_nac,
+        equipos: [...new Set(v.map((r) => r.equipo))].join(' / '),
+        torneos: new Set(v.map((r) => r.competencia)).size,
+        carreras: ok.length,
+        mejor_fina: best ? best.puntos_fina : null,
+        mejor_prueba: best ? best.prueba + ' (' + best.pileta + ')' : '—',
+      };
+    }, (r) => r.nadador_id).map(([nadador_id, o]) => ({ nadador_id, ...o })),
+  });
+
+  dash.onData(() => {
+    const k = dash.data('kpis_globales');
+    document.querySelectorAll('#takeaway [data-source]').forEach((el) => {
+      el.classList.toggle('dash-skeleton', k.status !== 'ok');
+      const v = k.status === 'ok' && k.data[0] ? k.data[0][el.dataset.field] : null;
+      el.textContent = v == null ? '—' : fmtN(v);
+    });
+  });
+
+  // ---------- Pestañas ----------
+  const tabs = [...document.querySelectorAll('.nm-tab')];
+  window.NM.tab = 'competencia';
+  window.NM.showTab = (id) => {
+    window.NM.tab = id;
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.tab === id)));
+    document.querySelectorAll('.nm-page').forEach((p) => { p.hidden = p.id !== id; });
+    dash.setLink(id);
+    window.NM.redraw && window.NM.redraw();
+  };
+  tabs.forEach((t) => t.addEventListener('click', () => window.NM.showTab(t.dataset.tab)));
+  const h = location.hash.slice(1);
+  if (['competencia', 'nadadores', 'evolucion', 'metodo'].includes(h)) window.NM.showTab(h);
+
+  // ---------- Utilidades de gráficos ----------
+  window.NM.svg = (el, w, hgt) => {
+    el.replaceChildren();
+    return d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${w} ${hgt}`).attr('height', hgt);
+  };
+  window.NM.axis = (g) => g.attr('font-size', null).attr('font-family', null).attr('class', 'ax');
+  window.NM.tip = (card) => {
+    let t = card.querySelector('.nm-tip');
+    if (!t) { t = document.createElement('div'); t.className = 'nm-tip'; card.appendChild(t); }
+    return {
+      show(ev, title, lines) {
+        t.replaceChildren();
+        const a = document.createElement('div'); a.className = 't1'; a.textContent = title; t.appendChild(a);
+        lines.forEach((l) => { const d = document.createElement('div'); d.textContent = l; t.appendChild(d); });
+        t.style.display = 'block';
+        const r = card.getBoundingClientRect();
+        let x = ev.clientX - r.left + 12, y = ev.clientY - r.top + 12;
+        if (x + t.offsetWidth > r.width - 4) x = ev.clientX - r.left - t.offsetWidth - 12;
+        if (y + t.offsetHeight > r.height - 4) y = ev.clientY - r.top - t.offsetHeight - 12;
+        t.style.left = Math.max(4, x) + 'px'; t.style.top = Math.max(4, y) + 'px';
+      },
+      hide() { t.style.display = 'none'; },
+    };
+  };
+  window.NM.legend = (el, items) => {
+    el.replaceChildren(...items.map(([label, color]) => { const s = document.createElement('span'); s.style.setProperty('--sw', color); s.textContent = label; return s; }));
+  };
+  window.NM.fail = (el, st) => {
+    el.classList.toggle('dash-skeleton', st === 'loading');
+    if (st === 'error' || st === 'connect') { el.replaceChildren(); const d = document.createElement('div'); d.className = 'nm-fail'; d.textContent = 'Failed to load'; el.appendChild(d); return true; }
+    if (st !== 'ok') { el.replaceChildren(); return true; }
+    return false;
+  };
+  window.NM.empty = (el, msg) => { el.replaceChildren(); const d = document.createElement('div'); d.className = 'nm-empty'; d.textContent = msg; el.appendChild(d); };
+  window.NM.qcat = (v, p) => d3.quantile(v, p);
+  window.NM.catOrder = (a) => [...new Set(a)].sort((x, y) => CATS.indexOf(x) - CATS.indexOf(y));
+  window.NM.pruebaOrder = (a, b) => (ESTILOS.indexOf(a.split(' ')[1]) - ESTILOS.indexOf(b.split(' ')[1])) || (parseInt(a) - parseInt(b));
+})();
+</script>
+
+<script>
+// ======================= COMPETENCIA =======================
+(() => {
+  const N = window.NM;
+  const selMeet = document.getElementById('sel-meet');
+  const selPr = document.getElementById('sel-prueba');
+  const segSexo = document.getElementById('seg-sexo');
+  const segComp = document.getElementById('seg-comp');
+  selMeet.addEventListener('change', () => dash.setParams({ meet: selMeet.value }));
+  selPr.addEventListener('change', () => dash.setParams({ prueba: selPr.value }));
+  segSexo.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) dash.setParams({ sexo: b.dataset.v }); });
+  segComp.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) dash.setParams({ comparar: b.dataset.v }); });
+  let sortK = 'puntos_fina', sortDir = -1;
+  document.querySelector('#tb-ranking thead').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (sortK === b.dataset.k) sortDir = -sortDir; else { sortK = b.dataset.k; sortDir = ['nadador', 'equipo', 'categoria', 'prueba', 'division', 'tiempo_s', 'puesto'].includes(sortK) ? 1 : -1; }
+    draw();
+  });
+  document.getElementById('q-ranking').addEventListener('input', () => draw());
+  document.querySelector('#tb-ranking tbody').addEventListener('click', (e) => {
+    const tr = e.target.closest('tr[data-sid]'); if (!tr) return;
+    dash.setParams({ nadador: Number(tr.dataset.sid) }); N.showTab('nadadores');
+  });
+
+  function draw() {
+    const p = dash.params();
+    const meetsD = dash.data('competencias');
+    const R = dash.data('resultados');
+    const meet = p.meet || 'SM23';
+    // selector de competencias
+    if (meetsD.status === 'ok' && selMeet.options.length !== meetsD.data.length) {
+      selMeet.replaceChildren(...meetsD.data.map((m) => new Option(`${m.nombre} · ${N.fmtD(m.fecha)}`, m.competencia)));
+    }
+    selMeet.value = meet;
+    segSexo.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === (p.sexo || 'all'))));
+    segComp.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === (p.comparar || 'sexo'))));
+    // KPIs
+    document.querySelectorAll('#kpis-meet [data-source]').forEach((el) => {
+      el.setAttribute('data-where', 'competencia=' + encodeURIComponent(meet));
+      const k = dash.data('kpis_competencia');
+      el.classList.toggle('dash-skeleton', k.status !== 'ok');
+      const row = k.status === 'ok' ? k.data.find((r) => r.competencia === meet) : null;
+      const v = row ? row[el.dataset.field] : null;
+      el.textContent = v == null ? '—' : (typeof v === 'number' ? N.fmtN(v) : v);
+    });
+    if (N.tab !== 'competencia') return;
+    const els = ['ch-piramide', 'ch-dist', 'ch-edad', 'ch-medallero', 'ch-equipos', 'ch-box', 'ch-mejora'].map((id) => document.getElementById(id));
+    if (els.map((el) => N.fail(el, R.status)).some(Boolean)) return;
+
+    const sexo = p.sexo || 'all';
+    const all = R.data.filter((r) => r.competencia === meet);
+    const base = all.filter((r) => !r.especial);
+    const bySex = (r) => sexo === 'all' || r.sexo === sexo;
+    const ok = base.filter((r) => r.estado === 'OK' && bySex(r));
+    const sexes = sexo === 'all' ? ['M', 'F'] : [sexo];
+    const sexItems = sexes.map((g) => [N.SEXO[g], N.sexColor(g)]);
+    ['lg-sexo1', 'lg-sexo2', 'lg-sexo3'].forEach((id) => N.legend(document.getElementById(id), id === 'lg-sexo1' ? [['Hombres', N.sexColor('M')], ['Mujeres', N.sexColor('F')]] : sexItems));
+
+    // selector de prueba
+    const pruebas = [...new Set(ok.map((r) => r.prueba))].sort(N.pruebaOrder);
+    const prueba = pruebas.includes(p.prueba) ? p.prueba : (pruebas.includes('50 Libre') ? '50 Libre' : pruebas[0]);
+    const cur = [...selPr.options].map((o) => o.value).join();
+    if (cur !== pruebas.join()) selPr.replaceChildren(...pruebas.map((x) => new Option(x, x)));
+    selPr.value = prueba;
+    document.getElementById('tt-dist').textContent = `Distribución de tiempos: ${prueba || ''}`;
+
+    piramide(els[0], base);
+    distrib(els[1], ok.filter((r) => r.prueba === prueba));
+    edad(els[2], ok.filter((r) => r.puntos_fina != null), sexes);
+    medallero(els[3], base.filter((r) => r.estado === 'OK' && r.puesto && r.puesto <= 3 && bySex(r)));
+    equipos(els[4], base.filter(bySex));
+    boxes(els[5], ok.filter((r) => r.puntos_fina != null), p.comparar || 'sexo');
+    mejora(els[6], ok.filter((r) => r.inscripcion_s));
+    ranking(all.filter((r) => r.estado === 'OK' && bySex(r)));
+  }
+
+  function piramide(el, rows) {
+    const W = Math.max(320, el.clientWidth), card = el.closest('.nm-card'), tip = N.tip(card);
+    const sw = d3.rollup(rows, (v) => new Set(v.map((r) => r.nadador_id)).size, (r) => r.categoria, (r) => r.sexo);
+    const cats = N.catOrder(rows.map((r) => r.categoria));
+    const H = Math.max(200, cats.length * 24 + 30);
+    const svg = N.svg(el, W, H);
+    const max = d3.max([...sw.values()].flatMap((m) => [...m.values()])) || 1;
+    const mid = W / 2, gap = 30;
+    const x = d3.scaleLinear([0, max], [0, mid - gap - 30]);
+    const y = d3.scaleBand(cats, [6, H - 22]).padding(0.2);
+    cats.forEach((c) => {
+      ['M', 'F'].forEach((g) => {
+        const n = sw.get(c)?.get(g) || 0, w = x(n);
+        svg.append('rect').attr('x', g === 'M' ? mid - gap - w : mid + gap).attr('y', y(c)).attr('width', w).attr('height', y.bandwidth()).attr('rx', 3).attr('fill', N.sexColor(g))
+          .on('mousemove', (ev) => tip.show(ev, `${c} · ${N.SEXO[g]}`, [`${N.fmtN(n)} nadadores`])).on('mouseleave', tip.hide);
+        if (n) svg.append('text').attr('x', g === 'M' ? mid - gap - w - 4 : mid + gap + w + 4).attr('y', y(c) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', g === 'M' ? 'end' : 'start').text(N.fmtN(n));
+      });
+      svg.append('text').attr('x', mid).attr('y', y(c) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'middle').style('fill', 'var(--color-fg)').text(c);
+    });
+    svg.append('text').attr('x', mid - gap).attr('y', H - 4).attr('text-anchor', 'end').text('← Hombres');
+    svg.append('text').attr('x', mid + gap).attr('y', H - 4).text('Mujeres →');
+  }
+
+  function distrib(el, rows) {
+    if (!rows.length) return N.empty(el, 'No hay tiempos válidos para esta prueba con los filtros elegidos.');
+    const W = Math.max(320, el.clientWidth), card = el.closest('.nm-card'), tip = N.tip(card);
+    const cats = N.catOrder(rows.map((r) => r.categoria));
+    const H = Math.max(240, cats.length * 30 + 40);
+    const svg = N.svg(el, W, H);
+    const tt = rows.map((r) => r.tiempo_s);
+    const lo = d3.quantile(tt.slice().sort(d3.ascending), 0.01), hi = d3.quantile(tt.slice().sort(d3.ascending), 0.98);
+    const m = { l: 52, r: 12, t: 6, b: 26 };
+    const x = d3.scaleLinear([lo * 0.97, hi * 1.03], [m.l, W - m.r]).nice();
+    const y = d3.scaleBand(cats, [m.t, H - m.b]).padding(0.15);
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(Math.max(3, W / 110)).tickSize(-(H - m.b - m.t)).tickFormat(''));
+    N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(Math.max(3, W / 110)).tickFormat(N.fmtT)));
+    N.axis(svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickSize(0))).select('.domain').remove();
+    const hash = (n) => ((n * 2654435761) % 1000) / 1000;
+    svg.append('g').selectAll('circle').data(rows).join('circle')
+      .attr('cx', (r) => x(Math.min(Math.max(r.tiempo_s, x.domain()[0]), x.domain()[1])))
+      .attr('cy', (r) => y(r.categoria) + y.bandwidth() * (r.sexo === 'M' ? 0.28 : 0.72) + (hash(r.rid) - 0.5) * y.bandwidth() * 0.3)
+      .attr('r', 3.5).attr('fill', (r) => N.sexColor(r.sexo)).attr('fill-opacity', 0.7)
+      .on('mousemove', (ev, r) => tip.show(ev, r.nadador, [`${r.equipo}`, `${r.categoria} · ${r.tiempo} · puesto ${r.puesto ?? '—'}`, `${r.puntos_fina ?? '—'} puntos FINA`]))
+      .on('mouseleave', tip.hide);
+    d3.flatRollup(rows, (v) => d3.median(v, (r) => r.tiempo_s), (r) => r.categoria, (r) => r.sexo).forEach(([c, g, md]) => {
+      const yy = y(c) + y.bandwidth() * (g === 'M' ? 0.28 : 0.72);
+      svg.append('line').attr('x1', x(md)).attr('x2', x(md)).attr('y1', yy - 8).attr('y2', yy + 8).attr('stroke', 'var(--color-fg)').attr('stroke-width', 2).attr('stroke-linecap', 'round');
+    });
+  }
+
+  function edad(el, rows, sexes) {
+    if (!rows.length) return N.empty(el, 'Sin carreras con puntos FINA para estos filtros.');
+    const W = Math.max(320, el.clientWidth), H = 380, card = el.closest('.nm-card'), tip = N.tip(card);
+    const svg = N.svg(el, W, H);
+    const mt = 60, mr = 70, m = { l: 44, b: 28 };
+    const x = d3.scaleLinear([18, Math.max(70, d3.max(rows, (r) => r.edad) + 1)], [m.l, W - mr - 8]);
+    const yMax = Math.min(1000, d3.quantile(rows.map((r) => r.puntos_fina).sort(d3.ascending), 0.995) * 1.05);
+    const y = d3.scaleLinear([0, yMax], [H - m.b, mt + 8]).nice();
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - mr - 8 - m.l)).tickFormat(''));
+    N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(Math.max(4, W / 90))));
+    N.axis(svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5)));
+    svg.append('text').attr('x', W - mr - 8).attr('y', H - m.b - 6).attr('text-anchor', 'end').text('edad');
+    const hash = (n) => ((n * 2654435761) % 1000) / 1000;
+    svg.append('g').selectAll('circle').data(rows).join('circle')
+      .attr('cx', (r) => x(r.edad + (hash(r.rid) - 0.5) * 0.7)).attr('cy', (r) => y(Math.min(r.puntos_fina, yMax))).attr('r', 2.6)
+      .attr('fill', (r) => N.sexColor(r.sexo)).attr('fill-opacity', 0.35)
+      .on('mousemove', (ev, r) => tip.show(ev, r.nadador, [`${r.edad} años · ${r.prueba} · ${r.tiempo}`, `${r.puntos_fina} puntos FINA`])).on('mouseleave', tip.hide);
+    sexes.forEach((g) => {
+      const v = rows.filter((r) => r.sexo === g);
+      const pts = d3.range(20, x.domain()[1] - 1, 1).map((a) => {
+        const win = v.filter((r) => Math.abs(r.edad - a) <= 3);
+        return win.length >= 8 ? [a, d3.median(win, (r) => r.puntos_fina)] : null;
+      }).filter(Boolean);
+      svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', N.sexColor(g)).attr('stroke-width', 2.5).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round')
+        .attr('d', d3.line((d) => x(d[0]), (d) => y(d[1])));
+    });
+    // marginal superior: edades
+    const binsX = d3.bin().domain(x.domain()).thresholds(d3.range(18, x.domain()[1], 2));
+    const hx = d3.scaleLinear([0, 1], [mt, 6]);
+    const sx = sexes.map((g) => binsX(rows.filter((r) => r.sexo === g).map((r) => r.edad)));
+    hx.domain([0, d3.max(sx.flat(), (b) => b.length) || 1]);
+    sx.forEach((bins, i) => svg.append('path').datum(bins).attr('fill', N.sexColor(sexes[i])).attr('fill-opacity', 0.35).attr('stroke', N.sexColor(sexes[i])).attr('stroke-width', 1.2)
+      .attr('d', d3.area((b) => x((b.x0 + b.x1) / 2), mt, (b) => hx(b.length)).curve(d3.curveStep)));
+    // marginal derecha: puntos
+    const binsY = d3.bin().domain(y.domain()).thresholds(d3.range(0, y.domain()[1], 25));
+    const sy = sexes.map((g) => binsY(rows.filter((r) => r.sexo === g).map((r) => Math.min(r.puntos_fina, yMax))));
+    const hy = d3.scaleLinear([0, d3.max(sy.flat(), (b) => b.length) || 1], [W - mr + 4, W - 4]);
+    sy.forEach((bins, i) => svg.append('path').datum(bins).attr('fill', N.sexColor(sexes[i])).attr('fill-opacity', 0.35).attr('stroke', N.sexColor(sexes[i])).attr('stroke-width', 1.2)
+      .attr('d', d3.area().y((b) => y((b.x0 + b.x1) / 2)).x0(W - mr + 4).x1((b) => hy(b.length)).curve(d3.curveStep)));
+  }
+
+  function medallero(el, rows) {
+    if (!rows.length) return N.empty(el, 'Sin podios para estos filtros.');
+    const W = Math.max(320, el.clientWidth), card = el.closest('.nm-card'), tip = N.tip(card);
+    const cols = ['1', '2', '3'], names = { 1: 'Oro', 2: 'Plata', 3: 'Bronce' }, colors = { 1: N.C[3], 2: N.C[5] || N.C[2], 3: N.C[6] || N.C[4] };
+    N.legend(document.getElementById('lg-medal'), cols.map((c) => [names[c], colors[c]]));
+    const t = d3.rollups(rows, (v) => ({ 1: v.filter((r) => r.puesto === 1).length, 2: v.filter((r) => r.puesto === 2).length, 3: v.filter((r) => r.puesto === 3).length }), (r) => r.equipo)
+      .map(([equipo, o]) => ({ equipo, ...o, score: o[1] * 3 + o[2] * 2 + o[3] })).sort((a, b) => b.score - a.score).slice(0, 12);
+    const H = t.length * 26 + 28;
+    const svg = N.svg(el, W, H);
+    const probe = svg.append('text').text('x');
+    const lw = Math.min(W * 0.42, d3.max(t, (d) => { probe.text(d.equipo); return probe.node().getComputedTextLength(); }) + 8);
+    probe.remove();
+    const y = d3.scaleBand(t.map((d) => d.equipo), [4, H - 22]).padding(0.22);
+    const x = d3.scaleLinear([0, d3.max(t, (d) => d[1] + d[2] + d[3])], [lw, W - 34]);
+    const st = d3.stack().keys(cols)(t);
+    st.forEach((s) => svg.append('g').selectAll('rect').data(s).join('rect').attr('x', (d) => x(d[0])).attr('width', (d) => Math.max(0, x(d[1]) - x(d[0]) - 1)).attr('y', (d) => y(d.data.equipo)).attr('height', y.bandwidth()).attr('rx', 3).attr('fill', colors[s.key])
+      .on('mousemove', (ev, d) => tip.show(ev, d.data.equipo, [`Oro ${d.data[1]} · Plata ${d.data[2]} · Bronce ${d.data[3]}`])).on('mouseleave', tip.hide));
+    svg.append('g').selectAll('text').data(t).join('text').attr('x', lw - 6).attr('y', (d) => y(d.equipo) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'end').style('fill', 'var(--color-fg)')
+      .text((d) => d.equipo.length > 34 ? d.equipo.slice(0, 33) + '…' : d.equipo);
+    svg.append('g').selectAll('text.tot').data(t).join('text').attr('x', (d) => x(d[1] + d[2] + d[3]) + 4).attr('y', (d) => y(d.equipo) + y.bandwidth() / 2).attr('dy', '0.35em').text((d) => d[1] + d[2] + d[3]);
+  }
+
+  function equipos(el, rows) {
+    const W = Math.max(320, el.clientWidth), H = 320, card = el.closest('.nm-card'), tip = N.tip(card);
+    const t = d3.rollups(rows, (v) => ({ nad: new Set(v.map((r) => r.nadador_id)).size, part: v.length, fina: d3.median(v.filter((r) => r.estado === 'OK'), (r) => r.puntos_fina) }), (r) => r.equipo)
+      .map(([equipo, o]) => ({ equipo, ...o })).filter((d) => d.nad >= 3 && d.fina != null);
+    if (!t.length) return N.empty(el, 'Ningún equipo con 3 o más nadadores.');
+    const svg = N.svg(el, W, H);
+    const m = { l: 44, r: 16, t: 12, b: 30 };
+    const x = d3.scaleLog([3, d3.max(t, (d) => d.nad) * 1.1], [m.l, W - m.r]);
+    const y = d3.scaleLinear(d3.extent(t, (d) => d.fina), [H - m.b, m.t]).nice();
+    const r = d3.scaleSqrt([0, d3.max(t, (d) => d.part)], [2, 22]);
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(''));
+    N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(5, '~s')));
+    N.axis(svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5)));
+    svg.append('text').attr('x', W - m.r).attr('y', H - m.b - 6).attr('text-anchor', 'end').text('nadadores (escala log)');
+    svg.append('g').selectAll('circle').data(t.sort((a, b) => b.part - a.part)).join('circle').attr('cx', (d) => x(d.nad)).attr('cy', (d) => y(d.fina)).attr('r', (d) => r(d.part))
+      .attr('fill', N.C[2]).attr('fill-opacity', 0.35).attr('stroke', N.C[2])
+      .on('mousemove', (ev, d) => tip.show(ev, d.equipo, [`${d.nad} nadadores · ${d.part} participaciones`, `Mediana ${Math.round(d.fina)} puntos FINA`])).on('mouseleave', tip.hide);
+    const top = t.slice().sort((a, b) => b.nad - a.nad).slice(0, 6);
+    const placed = [];
+    top.forEach((d) => {
+      const yy = y(d.fina) - r(d.part) - 3;
+      if (placed.some((p) => Math.abs(p - yy) < 12)) return;
+      placed.push(yy);
+      svg.append('text').attr('x', Math.min(x(d.nad), W - m.r)).attr('y', yy).attr('text-anchor', x(d.nad) > W * 0.7 ? 'end' : 'middle').style('fill', 'var(--color-fg)')
+        .text(d.equipo.length > 22 ? d.equipo.slice(0, 21) + '…' : d.equipo);
+    });
+  }
+
+  function boxes(el, rows, by) {
+    if (!rows.length) return N.empty(el, 'Sin datos.');
+    const W = Math.max(320, el.clientWidth), H = 300, card = el.closest('.nm-card'), tip = N.tip(card);
+    const groups = by === 'sexo' ? ['M', 'F'] : ['LIB', 'FED'];
+    const gName = by === 'sexo' ? N.SEXO : { LIB: 'Libres', FED: 'Federados' };
+    const gCol = (g) => by === 'sexo' ? N.sexColor(g) : (g === 'LIB' ? N.C[2] : N.C[3]);
+    N.legend(document.getElementById('lg-box'), groups.map((g) => [gName[g], gCol(g)]));
+    const key = by === 'sexo' ? 'sexo' : 'division';
+    const cats = N.catOrder(rows.map((r) => r.categoria));
+    const svg = N.svg(el, W, H);
+    const m = { l: 40, r: 8, t: 8, b: 40 };
+    const x = d3.scaleBand(cats, [m.l, W - m.r]).padding(0.2);
+    const xi = d3.scaleBand(groups, [0, x.bandwidth()]).padding(0.12);
+    const y = d3.scaleLinear([0, Math.min(1000, d3.quantile(rows.map((r) => r.puntos_fina).sort(d3.ascending), 0.99) * 1.05)], [H - m.b, m.t]).nice();
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(''));
+    const ax = N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickSize(0)));
+    if (x.bandwidth() < 34) ax.selectAll('text').attr('transform', 'rotate(-40)').attr('text-anchor', 'end').attr('dx', '-0.3em').attr('dy', '0.6em');
+    N.axis(svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5)));
+    cats.forEach((c) => groups.forEach((g) => {
+      const v = rows.filter((r) => r.categoria === c && r[key] === g).map((r) => r.puntos_fina).sort(d3.ascending);
+      if (v.length < 3) return;
+      const q = [0.05, 0.25, 0.5, 0.75, 0.95].map((p) => d3.quantile(v, p));
+      const cx = x(c) + xi(g), bw = xi.bandwidth(), col = gCol(g);
+      const gg = svg.append('g').on('mousemove', (ev) => tip.show(ev, `${c} · ${gName[g]}`, [`n = ${v.length}`, `Mediana ${Math.round(q[2])} · RIC ${Math.round(q[1])}–${Math.round(q[3])}`])).on('mouseleave', tip.hide);
+      gg.append('line').attr('x1', cx + bw / 2).attr('x2', cx + bw / 2).attr('y1', y(q[0])).attr('y2', y(q[4])).attr('stroke', col);
+      gg.append('rect').attr('x', cx).attr('width', bw).attr('y', y(q[3])).attr('height', Math.max(1, y(q[1]) - y(q[3]))).attr('rx', 3).attr('fill', col).attr('fill-opacity', 0.35).attr('stroke', col);
+      gg.append('line').attr('x1', cx).attr('x2', cx + bw).attr('y1', y(q[2])).attr('y2', y(q[2])).attr('stroke', 'var(--color-fg)').attr('stroke-width', 2);
+    }));
+  }
+
+  function mejora(el, rows) {
+    if (!rows.length) return N.empty(el, 'Esta competencia no publica tiempos de inscripción.');
+    const W = Math.max(320, el.clientWidth), H = 300, card = el.closest('.nm-card'), tip = N.tip(card);
+    const v = rows.map((r) => Math.max(-20, Math.min(20, 100 * (r.tiempo_s - r.inscripcion_s) / r.inscripcion_s)));
+    const svg = N.svg(el, W, H);
+    const m = { l: 40, r: 10, t: 22, b: 30 };
+    const x = d3.scaleLinear([-20, 20], [m.l, W - m.r]);
+    const bins = d3.bin().domain([-20, 20]).thresholds(d3.range(-20, 20, 1))(v);
+    const y = d3.scaleLinear([0, d3.max(bins, (b) => b.length)], [H - m.b, m.t]).nice();
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(W - m.l - m.r)).tickFormat(''));
+    N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(8).tickFormat((d) => d + ' %')));
+    N.axis(svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4)));
+    svg.append('g').selectAll('rect').data(bins).join('rect').attr('x', (b) => x(b.x0) + 1).attr('width', (b) => Math.max(0, x(b.x1) - x(b.x0) - 2)).attr('y', (b) => y(b.length)).attr('height', (b) => y(0) - y(b.length)).attr('rx', 2)
+      .attr('fill', (b) => b.x1 <= 0 ? 'var(--color-ok)' : N.C[0]).attr('fill-opacity', (b) => b.x1 <= 0 ? 0.75 : 0.45)
+      .on('mousemove', (ev, b) => tip.show(ev, `${b.x0} % a ${b.x1} %`, [`${b.length} carreras`])).on('mouseleave', tip.hide);
+    svg.append('line').attr('x1', x(0)).attr('x2', x(0)).attr('y1', m.t).attr('y2', H - m.b).attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
+    const pct = Math.round(100 * v.filter((d) => d < 0).length / v.length);
+    svg.append('text').attr('x', x(0) - 6).attr('y', m.t - 8).attr('text-anchor', 'end').style('fill', 'var(--color-fg)').text(`${pct} % mejoró su inscripción`);
+    svg.append('text').attr('x', x(0) + 6).attr('y', m.t - 8).text(`mediana ${d3.median(v).toFixed(1)} %`);
+  }
+
+  function ranking(rows) {
+    const q = document.getElementById('q-ranking').value.trim().toLowerCase();
+    let v = rows.filter((r) => r.puntos_fina != null && (!q || r.nadador.toLowerCase().includes(q) || r.equipo.toLowerCase().includes(q)));
+    v.sort((a, b) => { const A = a[sortK], B = b[sortK]; return (A == null) - (B == null) || (typeof A === 'string' ? A.localeCompare(B) : A - B) * sortDir; });
+    document.querySelectorAll('#tb-ranking th').forEach((th) => { const b = th.querySelector('button'); th.setAttribute('aria-sort', b.dataset.k === sortK ? (sortDir > 0 ? 'ascending' : 'descending') : 'none'); });
+    const tb = document.querySelector('#tb-ranking tbody');
+    tb.replaceChildren(...v.slice(0, 600).map((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.rid; tr.dataset.sid = r.nadador_id; tr.className = 'click';
+      [[r.nadador], [r.equipo], [r.categoria], [r.prueba], [r.division], [r.tiempo, 1], [r.puesto ?? '—', 1], [r.puntos_fina, 1]].forEach(([t, num]) => {
+        const td = document.createElement('td'); td.textContent = t; if (num) td.className = 'num'; tr.appendChild(td);
+      });
+      return tr;
+    }));
+  }
+
+  window.NM.redrawComp = draw;
+  dash.onData(draw);
+})();
+</script>
+
+<script>
+// ======================= NADADORES =======================
+(() => {
+  const N = window.NM;
+  const inN = document.getElementById('in-nad'), inN2 = document.getElementById('in-nad2'), dl = document.getElementById('dl-nad');
+  let labelMap = new Map(), lastRows = null, groupN = new Map(), defaultSid = null;
+  const labelOf = (s) => `${s.nadador} (${s.anio_nac})`;
+  inN.addEventListener('change', () => { const id = labelMap.get(inN.value); if (id) dash.setParams({ nadador: id }); });
+  inN2.addEventListener('change', () => { const id = labelMap.get(inN2.value); dash.setParams({ nadador2: id || null }); });
+  document.getElementById('chips').addEventListener('click', (e) => { const b = e.target.closest('button[data-id]'); if (b) dash.setParams({ nadador: Number(b.dataset.id) }); });
+  document.querySelector('#tb-multi tbody').addEventListener('click', (e) => { const tr = e.target.closest('tr[data-key]'); if (tr) { dash.setParams({ nadador: Number(tr.dataset.key) }); N.showTab('nadadores'); } });
+  const gkey = (r) => [r.competencia, r.sexo, r.categoria_original, r.prueba, r.division].join('|');
+
+  function draw() {
+    const p = dash.params(), R = dash.data('resultados'), S = dash.data('resumen_nadador');
+    if (S.status === 'ok' && R.status === 'ok' && lastRows !== R.data) {
+      lastRows = R.data;
+      labelMap = new Map(S.data.map((s) => [labelOf(s), s.nadador_id]));
+      dl.replaceChildren(...S.data.map((s) => new Option(labelOf(s))));
+      groupN = d3.rollup(R.data.filter((r) => r.estado === 'OK' && !r.especial), (v) => v.length, gkey);
+      const top = S.data.slice().sort((a, b) => b.torneos - a.torneos || (b.mejor_fina ?? 0) - (a.mejor_fina ?? 0));
+      defaultSid = top[0]?.nadador_id;
+      const chips = document.getElementById('chips');
+      chips.replaceChildren(...top.slice(0, 8).map((s) => { const b = document.createElement('button'); b.dataset.id = s.nadador_id; b.textContent = `${s.nadador} · ${s.torneos}`; return b; }));
+    }
+    multiTable(S);
+    const sid = p.nadador ?? defaultSid;
+    const s = S.status === 'ok' ? S.data.find((d) => d.nadador_id === sid) : null;
+    const s2 = S.status === 'ok' && p.nadador2 ? S.data.find((d) => d.nadador_id === p.nadador2) : null;
+    if (s && document.activeElement !== inN) inN.value = labelOf(s);
+    if (document.activeElement !== inN2) inN2.value = s2 ? labelOf(s2) : '';
+    ['p-name', 'p-anio', 'p-eq', 'p-torneos', 'p-carreras', 'p-mejor', 'p-mejorp'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (sid != null) el.setAttribute('data-where', 'nadador_id=' + sid);
+      el.classList.toggle('dash-skeleton', !s);
+      const v = s ? s[el.dataset.field] : null;
+      el.textContent = v == null ? '—' : (typeof v === 'number' && el.dataset.field !== 'anio_nac' ? N.fmtN(v) : String(v));
+    });
+    if (N.tab === 'evolucion') { fidel(S); return; }
+    if (N.tab !== 'nadadores') return;
+    const els = ['ch-fina-t', 'ch-pruebas', 'ch-pct'].map((id) => document.getElementById(id));
+    if (els.map((el) => N.fail(el, R.status)).some(Boolean)) return;
+    const mine = R.data.filter((r) => r.nadador_id === sid).sort((a, b) => a.fecha.localeCompare(b.fecha));
+    const other = s2 ? R.data.filter((r) => r.nadador_id === s2.nadador_id) : [];
+    const ok = mine.filter((r) => r.estado === 'OK' && r.puntos_fina != null);
+    finaT(els[0], ok, other.filter((r) => r.estado === 'OK' && r.puntos_fina != null), s, s2);
+    pruebas(els[1], ok);
+    pct(els[2], ok.filter((r) => !r.especial && r.puesto));
+    hist(mine);
+  }
+
+  function finaT(el, rows, rows2, s, s2) {
+    if (!rows.length) return N.empty(el, 'Este nadador no tiene carreras válidas con puntos FINA.');
+    const W = Math.max(320, el.clientWidth), H = 300, card = el.closest('.nm-card'), tip = N.tip(card);
+    const est = [...new Set(rows.map((r) => r.estilo))].sort((a, b) => N.ESTILOS.indexOf(a) - N.ESTILOS.indexOf(b));
+    const lg = est.map((e) => [e, N.estColor(e)]);
+    if (s2) lg.push([`${s2.nadador} (mejor por torneo)`, 'var(--color-fg-muted)']);
+    N.legend(document.getElementById('lg-estilo'), lg);
+    const all = rows.concat(rows2);
+    const dates = d3.extent(all, (r) => new Date(r.fecha));
+    const pad = 1000 * 3600 * 24 * 40;
+    const svg = N.svg(el, W, H);
+    const m = { l: 44, r: 16, t: 10, b: 30 };
+    const x = d3.scaleUtc([new Date(+dates[0] - pad), new Date(+dates[1] + pad)], [m.l, W - m.r]);
+    const y = d3.scaleLinear([0, d3.max(all, (r) => r.puntos_fina) * 1.1], [H - m.b, m.t]).nice();
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(''));
+    N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(Math.max(3, W / 120)).tickFormat(d3.utcFormat('%b %Y'))));
+    N.axis(svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5)));
+    const bestLine = (v) => d3.rollups(v, (g) => d3.max(g, (r) => r.puntos_fina), (r) => r.fecha).map(([f, b]) => [new Date(f), b]).sort((a, b) => a[0] - b[0]);
+    if (rows2.length) svg.append('path').datum(bestLine(rows2)).attr('fill', 'none').attr('stroke', 'var(--color-fg-muted)').attr('stroke-width', 2).attr('stroke-dasharray', '5 4').attr('d', d3.line((d) => x(d[0]), (d) => y(d[1])));
+    svg.append('path').datum(bestLine(rows)).attr('fill', 'none').attr('stroke', 'var(--color-fg)').attr('stroke-width', 2).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round').attr('d', d3.line((d) => x(d[0]), (d) => y(d[1])));
+    const hash = (n) => ((n * 2654435761) % 1000) / 1000;
+    svg.append('g').selectAll('circle').data(rows).join('circle').attr('cx', (r) => x(new Date(r.fecha)) + (hash(r.rid) - 0.5) * 14).attr('cy', (r) => y(r.puntos_fina)).attr('r', 5)
+      .attr('fill', (r) => N.estColor(r.estilo)).attr('stroke', 'var(--color-panel)')
+      .on('mousemove', (ev, r) => tip.show(ev, `${r.competencia} · ${N.fmtD(r.fecha)}`, [`${r.prueba} (${r.pileta}) · ${r.tiempo}`, `${r.puntos_fina} puntos FINA · puesto ${r.puesto ?? '—'}`])).on('mouseleave', tip.hide);
+  }
+
+  function pruebas(el, rows) {
+    if (!rows.length) return N.empty(el, 'Sin carreras válidas.');
+    const W = Math.max(300, el.clientWidth), card = el.closest('.nm-card'), tip = N.tip(card);
+    const groups = d3.groups(rows, (r) => r.prueba).sort((a, b) => b[1].length - a[1].length || N.pruebaOrder(a[0], b[0]));
+    const cols = W > 560 ? 3 : 2, pw = W / cols, ph = 120;
+    const H = Math.ceil(groups.length / cols) * ph;
+    const svg = N.svg(el, W, H);
+    const xd = d3.extent(rows, (r) => new Date(r.fecha)), pad = 1000 * 3600 * 24 * 60;
+    groups.forEach(([pr, v], i) => {
+      const gx = (i % cols) * pw, gy = Math.floor(i / cols) * ph;
+      const g = svg.append('g').attr('transform', `translate(${gx},${gy})`);
+      const x = d3.scaleUtc([new Date(+xd[0] - pad), new Date(+xd[1] + pad)], [36, pw - 12]);
+      const ext = d3.extent(v, (r) => r.tiempo_s), sp = Math.max(0.5, (ext[1] - ext[0]) * 0.15);
+      const y = d3.scaleLinear([ext[1] + sp, ext[0] - sp], [ph - 22, 22]);
+      g.append('text').attr('x', 36).attr('y', 12).style('fill', 'var(--color-fg)').text(pr);
+      N.axis(g.append('g').attr('transform', 'translate(36,0)').call(d3.axisLeft(y).ticks(3).tickFormat(N.fmtT)));
+      g.append('line').attr('x1', 36).attr('x2', pw - 12).attr('y1', ph - 22).attr('y2', ph - 22).attr('stroke', 'var(--cds-chart-axis)');
+      const vv = v.slice().sort((a, b) => a.fecha.localeCompare(b.fecha));
+      if (vv.length > 1) g.append('path').datum(vv).attr('fill', 'none').attr('stroke', N.estColor(vv[0].estilo)).attr('stroke-width', 1.5).attr('stroke-opacity', 0.6).attr('d', d3.line((r) => x(new Date(r.fecha)), (r) => y(r.tiempo_s)));
+      g.selectAll('circle').data(vv).join('circle').attr('cx', (r) => x(new Date(r.fecha))).attr('cy', (r) => y(r.tiempo_s)).attr('r', 4.5)
+        .attr('fill', (r) => r.pileta === 'LCM' ? N.estColor(r.estilo) : 'var(--color-panel)').attr('stroke', (r) => N.estColor(r.estilo)).attr('stroke-width', 2)
+        .on('mousemove', (ev, r) => tip.show(ev, `${r.prueba} · ${N.fmtD(r.fecha)}`, [`${r.tiempo} (${r.pileta === 'LCM' ? '50 m' : '25 m'})`, r.competencia])).on('mouseleave', tip.hide);
+    });
+  }
+
+  function pct(el, rows) {
+    const v = rows.map((r) => { const n = groupN.get(gkey(r)) || 1; return { ...r, n, pc: n > 1 ? 100 * (n - r.puesto) / (n - 1) : 100 }; });
+    if (!v.length) return N.empty(el, 'Sin puestos en series por categoría.');
+    const W = Math.max(300, el.clientWidth), H = 300, card = el.closest('.nm-card'), tip = N.tip(card);
+    const svg = N.svg(el, W, H);
+    const m = { l: 40, r: 14, t: 10, b: 30 };
+    const xd = d3.extent(v, (r) => new Date(r.fecha)), pad = 1000 * 3600 * 24 * 40;
+    const x = d3.scaleUtc([new Date(+xd[0] - pad), new Date(+xd[1] + pad)], [m.l, W - m.r]);
+    const y = d3.scaleLinear([0, 100], [H - m.b, m.t]);
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(''));
+    N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(Math.max(3, W / 120)).tickFormat(d3.utcFormat('%b %Y'))));
+    N.axis(svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5)));
+    const hash = (n) => ((n * 2654435761) % 1000) / 1000;
+    svg.append('g').selectAll('circle').data(v).join('circle').attr('cx', (r) => x(new Date(r.fecha)) + (hash(r.rid) - 0.5) * 16).attr('cy', (r) => y(r.pc)).attr('r', (r) => Math.min(9, 3 + Math.sqrt(r.n)))
+      .attr('fill', (r) => N.estColor(r.estilo)).attr('fill-opacity', 0.7).attr('stroke', 'var(--color-panel)')
+      .on('mousemove', (ev, r) => tip.show(ev, `${r.prueba} · ${r.competencia}`, [`Puesto ${r.puesto} de ${r.n} (${r.categoria}, ${r.division})`, `Percentil ${Math.round(r.pc)}`])).on('mouseleave', tip.hide);
+  }
+
+  function hist(rows) {
+    const tb = document.querySelector('#tb-nad tbody');
+    tb.replaceChildren(...rows.map((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.rid;
+      [[r.fecha], [r.competencia], [r.prueba], [r.pileta], [r.categoria], [r.equipo], [r.tiempo ?? r.estado, 1], [r.puesto ?? '—', 1], [r.puntos_fina ?? '—', 1]].forEach(([t, num]) => {
+        const td = document.createElement('td'); td.textContent = t; if (num) td.className = 'num'; tr.appendChild(td);
+      });
+      return tr;
+    }));
+  }
+
+  function multiTable(S) {
+    const tb = document.querySelector('#tb-multi tbody');
+    if (S.status !== 'ok') { tb.replaceChildren(); return; }
+    const v = S.data.filter((s) => s.torneos >= 3).sort((a, b) => b.torneos - a.torneos || (b.mejor_fina ?? 0) - (a.mejor_fina ?? 0));
+    tb.replaceChildren(...v.map((s) => {
+      const tr = document.createElement('tr'); tr.dataset.key = s.nadador_id; tr.className = 'click';
+      [[s.nadador], [s.equipos], [s.torneos, 1], [s.carreras, 1], [s.mejor_fina ?? '—', 1]].forEach(([t, num]) => { const td = document.createElement('td'); td.textContent = t; if (num) td.className = 'num'; tr.appendChild(td); });
+      return tr;
+    }));
+  }
+
+  function fidel(S) {
+    const el = document.getElementById('ch-fidel');
+    if (N.fail(el, S.status)) return;
+    const W = Math.max(300, el.clientWidth), H = 300, card = el.closest('.nm-card'), tip = N.tip(card);
+    const c = d3.rollups(S.data, (v) => v.length, (s) => s.torneos).sort((a, b) => a[0] - b[0]);
+    const svg = N.svg(el, W, H);
+    const m = { l: 48, r: 10, t: 16, b: 30 };
+    const x = d3.scaleBand(c.map((d) => d[0]), [m.l, W - m.r]).padding(0.3);
+    const y = d3.scaleLog([1, d3.max(c, (d) => d[1]) * 1.3], [H - m.b, m.t]);
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4, '~s').tickSize(-(W - m.l - m.r)).tickFormat(''));
+    N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickFormat((d) => d + (d === 1 ? ' torneo' : ''))));
+    N.axis(svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4, '~s')));
+    svg.append('g').selectAll('rect').data(c).join('rect').attr('x', (d) => x(d[0]) + Math.max(0, (x.bandwidth() - 32) / 2)).attr('width', Math.min(32, x.bandwidth())).attr('y', (d) => y(d[1])).attr('height', (d) => y(1) - y(d[1])).attr('rx', 4).attr('fill', N.C[0])
+      .on('mousemove', (ev, d) => tip.show(ev, `${d[0]} torneo${d[0] > 1 ? 's' : ''}`, [`${N.fmtN(d[1])} nadadores`])).on('mouseleave', tip.hide);
+    svg.append('g').selectAll('text.v').data(c).join('text').attr('x', (d) => x(d[0]) + x.bandwidth() / 2).attr('y', (d) => y(d[1]) - 4).attr('text-anchor', 'middle').text((d) => N.fmtN(d[1]));
+    svg.append('text').attr('x', m.l + 4).attr('y', m.t - 4).text('escala log');
+  }
+
+  dash.onData(draw);
+  window.NM.redrawNad = draw;
+})();
+</script>
+
+<script>
+// ======================= EVOLUCIÓN =======================
+(() => {
+  const N = window.NM;
+  function draw() {
+    if (N.tab !== 'evolucion') return;
+    const R = dash.data('resultados'), M = dash.data('competencias');
+    const els = ['ch-part', 'ch-curva', 'ch-heat', 'ch-eqt'].map((id) => document.getElementById(id));
+    if (els.map((el) => N.fail(el, R.status === 'ok' && M.status !== 'ok' ? M.status : R.status)).some(Boolean)) return;
+    const meets = M.data.slice().sort((a, b) => a.fecha.localeCompare(b.fecha));
+    const mlabel = (id) => { const m = meets.find((x) => x.competencia === id); return m ? `${m.ciudad} ${m.fecha.slice(0, 4)}` : id; };
+    N.legend(document.getElementById('lg-sexo4'), [['Hombres', N.sexColor('M')], ['Mujeres', N.sexColor('F')]]);
+    N.legend(document.getElementById('lg-sexo5'), [['Hombres', N.sexColor('M')], ['Mujeres', N.sexColor('F')]]);
+    part(els[0], R.data, meets, mlabel);
+    curva(els[1], R.data.filter((r) => r.estado === 'OK' && !r.especial && r.puntos_fina != null));
+    heat(els[2], R.data.filter((r) => r.estado === 'OK' && !r.especial && r.puntos_fina != null), meets, mlabel);
+    eqt(els[3], R.data, meets, mlabel);
+  }
+
+  function part(el, rows, meets, mlabel) {
+    const W = Math.max(300, el.clientWidth), H = 300, card = el.closest('.nm-card'), tip = N.tip(card);
+    const d = meets.map((m) => { const v = rows.filter((r) => r.competencia === m.competencia); const s = d3.rollup(v, (g) => new Set(g.map((r) => r.nadador_id)).size, (r) => r.sexo); return { id: m.competencia, M: s.get('M') || 0, F: s.get('F') || 0 }; });
+    const svg = N.svg(el, W, H);
+    const m = { l: 40, r: 8, t: 16, b: 46 };
+    const x = d3.scaleBand(d.map((r) => r.id), [m.l, W - m.r]).padding(0.3);
+    const y = d3.scaleLinear([0, d3.max(d, (r) => r.M + r.F)], [H - m.b, m.t]).nice();
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(''));
+    const ax = N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickFormat(mlabel).tickSize(0)));
+    ax.selectAll('text').attr('transform', 'rotate(-30)').attr('text-anchor', 'end').attr('dx', '-0.2em').attr('dy', '0.8em');
+    N.axis(svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5)));
+    const bw = Math.min(32, x.bandwidth()), off = (x.bandwidth() - bw) / 2;
+    d3.stack().keys(['M', 'F'])(d).forEach((s) => svg.append('g').selectAll('rect').data(s).join('rect').attr('x', (r) => x(r.data.id) + off).attr('width', bw).attr('y', (r) => y(r[1])).attr('height', (r) => Math.max(0, y(r[0]) - y(r[1]) - 1)).attr('rx', 3).attr('fill', N.sexColor(s.key))
+      .on('mousemove', (ev, r) => tip.show(ev, mlabel(r.data.id), [`Hombres ${r.data.M} · Mujeres ${r.data.F}`, `Mujeres: ${Math.round(100 * r.data.F / (r.data.M + r.data.F))} %`])).on('mouseleave', tip.hide));
+    svg.append('g').selectAll('text.t').data(d).join('text').attr('x', (r) => x(r.id) + x.bandwidth() / 2).attr('y', (r) => y(r.M + r.F) - 4).attr('text-anchor', 'middle').text((r) => r.M + r.F);
+  }
+
+  function curva(el, rows) {
+    const W = Math.max(300, el.clientWidth), H = 300, card = el.closest('.nm-card'), tip = N.tip(card);
+    const cats = N.catOrder(rows.map((r) => r.categoria));
+    const svg = N.svg(el, W, H);
+    const m = { l: 40, r: 10, t: 10, b: 40 };
+    const x = d3.scalePoint(cats, [m.l + 10, W - m.r - 10]);
+    const y = d3.scaleLinear([0, 700], [H - m.b, m.t]);
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(''));
+    const ax = N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickSize(0)));
+    if (W / cats.length < 40) ax.selectAll('text').attr('transform', 'rotate(-40)').attr('text-anchor', 'end').attr('dy', '0.8em');
+    N.axis(svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5)));
+    ['M', 'F'].forEach((g) => {
+      const pts = cats.map((c) => { const v = rows.filter((r) => r.categoria === c && r.sexo === g).map((r) => r.puntos_fina).sort(d3.ascending); return v.length >= 10 ? { c, n: v.length, q1: d3.quantile(v, 0.25), md: d3.quantile(v, 0.5), q3: d3.quantile(v, 0.75) } : null; }).filter(Boolean);
+      svg.append('path').datum(pts).attr('fill', N.sexColor(g)).attr('fill-opacity', 0.14).attr('d', d3.area((d) => x(d.c), (d) => y(d.q1), (d) => y(d.q3)));
+      svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', N.sexColor(g)).attr('stroke-width', 2).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round').attr('d', d3.line((d) => x(d.c), (d) => y(d.md)));
+      svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', (d) => x(d.c)).attr('cy', (d) => y(d.md)).attr('r', 4).attr('fill', N.sexColor(g))
+        .on('mousemove', (ev, d) => tip.show(ev, `${d.c} · ${N.SEXO[g]}`, [`Mediana ${Math.round(d.md)} puntos`, `RIC ${Math.round(d.q1)}–${Math.round(d.q3)} · n = ${d.n}`])).on('mouseleave', tip.hide);
+    });
+  }
+
+  function heat(el, rows, meets, mlabel) {
+    const W = Math.max(300, el.clientWidth), card = el.closest('.nm-card'), tip = N.tip(card);
+    const cats = N.catOrder(rows.map((r) => r.categoria)).filter((c) => rows.filter((r) => r.categoria === c).length >= 20);
+    const ids = meets.map((m) => m.competencia);
+    const cell = d3.rollup(rows, (v) => ({ n: v.length, md: d3.median(v, (r) => r.puntos_fina) }), (r) => r.categoria, (r) => r.competencia);
+    const m = { l: 52, r: 8, t: 8, b: 56 };
+    const ch = 22, H = cats.length * ch + m.t + m.b;
+    const svg = N.svg(el, W, H);
+    const x = d3.scaleBand(ids, [m.l, W - m.r]).padding(0.06);
+    const y = d3.scaleBand(cats, [m.t, H - m.b]).padding(0.06);
+    const vals = [...cell.values()].flatMap((mm) => [...mm.values()]).filter((o) => o.n >= 5).map((o) => o.md);
+    const op = d3.scaleLinear(d3.extent(vals), [0.08, 0.95]);
+    const ax = N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickFormat(mlabel).tickSize(0)));
+    ax.select('.domain').remove();
+    ax.selectAll('text').attr('transform', 'rotate(-30)').attr('text-anchor', 'end').attr('dx', '-0.2em').attr('dy', '0.8em');
+    N.axis(svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickSize(0))).select('.domain').remove();
+    cats.forEach((c) => ids.forEach((id) => {
+      const o = cell.get(c)?.get(id);
+      if (!o || o.n < 5) return;
+      svg.append('rect').attr('x', x(id)).attr('y', y(c)).attr('width', x.bandwidth()).attr('height', y.bandwidth()).attr('rx', 3).attr('fill', N.C[0]).attr('fill-opacity', op(o.md))
+        .on('mousemove', (ev) => tip.show(ev, `${c} · ${mlabel(id)}`, [`Mediana ${Math.round(o.md)} puntos FINA`, `${o.n} carreras`])).on('mouseleave', tip.hide);
+      if (x.bandwidth() > 30) svg.append('text').attr('x', x(id) + x.bandwidth() / 2).attr('y', y(c) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'middle').style('fill', op(o.md) > 0.55 ? 'var(--color-bg)' : 'var(--color-fg)').style('pointer-events', 'none').text(Math.round(o.md));
+    }));
+  }
+
+  function eqt(el, rows, meets, mlabel) {
+    const W = Math.max(300, el.clientWidth), card = el.closest('.nm-card'), tip = N.tip(card);
+    const top = d3.rollups(rows, (v) => v.length, (r) => r.equipo).sort((a, b) => b[1] - a[1]).slice(0, 15).map((d) => d[0]);
+    const ids = meets.map((m) => m.competencia);
+    const cell = d3.rollup(rows.filter((r) => top.includes(r.equipo)), (v) => new Set(v.map((r) => r.nadador_id)).size, (r) => r.equipo, (r) => r.competencia);
+    const svg0 = N.svg(el, W, 10);
+    const probe = svg0.append('text').text('x');
+    const lw = Math.min(W * 0.45, d3.max(top, (t) => { probe.text(t.length > 30 ? t.slice(0, 29) + '…' : t); return probe.node().getComputedTextLength(); }) + 10);
+    const m = { l: lw, r: 8, t: 8, b: 56 }, ch = 20, H = top.length * ch + m.t + m.b;
+    const svg = N.svg(el, W, H);
+    const x = d3.scaleBand(ids, [m.l, W - m.r]).padding(0.06);
+    const y = d3.scaleBand(top, [m.t, H - m.b]).padding(0.08);
+    const mx = d3.max([...cell.values()].flatMap((mm) => [...mm.values()]));
+    const op = d3.scaleSqrt([0, mx], [0.06, 0.95]);
+    const ax = N.axis(svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickFormat(mlabel).tickSize(0)));
+    ax.select('.domain').remove();
+    ax.selectAll('text').attr('transform', 'rotate(-30)').attr('text-anchor', 'end').attr('dx', '-0.2em').attr('dy', '0.8em');
+    svg.append('g').selectAll('text').data(top).join('text').attr('x', m.l - 6).attr('y', (t) => y(t) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'end').text((t) => t.length > 30 ? t.slice(0, 29) + '…' : t);
+    top.forEach((t) => ids.forEach((id) => {
+      const n = cell.get(t)?.get(id) || 0;
+      if (!n) return;
+      svg.append('rect').attr('x', x(id)).attr('y', y(t)).attr('width', x.bandwidth()).attr('height', y.bandwidth()).attr('rx', 3).attr('fill', N.C[2]).attr('fill-opacity', op(n))
+        .on('mousemove', (ev) => tip.show(ev, t, [`${mlabel(id)}: ${n} nadadores`])).on('mouseleave', tip.hide);
+      if (x.bandwidth() > 24) svg.append('text').attr('x', x(id) + x.bandwidth() / 2).attr('y', y(t) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'middle').style('fill', op(n) > 0.55 ? 'var(--color-bg)' : 'var(--color-fg)').style('pointer-events', 'none').text(n);
+    }));
+  }
+
+  dash.onData(draw);
+  window.NM.redraw = () => { window.NM.redrawComp(); window.NM.redrawNad(); draw(); };
+})();
+</script>
